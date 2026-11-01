@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+backups
+certbot
+*.log
+.DS_Store
