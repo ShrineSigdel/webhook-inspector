@@ -1,16 +1,15 @@
 import express, { Router } from 'express';
-import { z } from 'zod';
 import { pool } from '../db';
-
-const endpointIdSchema = z.string().regex(/^[a-km-np-z2-9]{10}$/);
+import { hookLimiter } from '../middleware/rateLimit';
+import { endpointIdSchema } from '../validation';
 
 export const hooksRouter = Router();
 
 // Capture every content type as a raw buffer. This router is mounted before
-// express.json() in server.ts so the JSON parser never consumes the body.
-hooksRouter.use(express.raw({ type: () => true, limit: '1mb' })); // that's why we use Buffer beloow 
+// express.json() in app.ts so the JSON parser never consumes the body.
+hooksRouter.use(express.raw({ type: () => true, limit: '1mb' }));
 
-hooksRouter.all('/:id', async (req, res, next) => {
+hooksRouter.all('/:id', hookLimiter, async (req, res, next) => {
   const parsedId = endpointIdSchema.safeParse(req.params.id);
   if (!parsedId.success) {
     res.status(404).json({ error: 'endpoint not found' });
