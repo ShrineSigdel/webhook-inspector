@@ -8,10 +8,10 @@ import {
   hashRefreshToken,
   setRefreshCookie,
   signAccessToken,
-} from '../auth';
-import { pool } from '../db';
+} from '../lib/auth';
+import { pool } from '../lib/db';
 import { loginLimiter } from '../middleware/rateLimit';
-import { loginBodySchema, registerBodySchema } from '../validation';
+import { loginBodySchema, registerBodySchema } from '../lib/validation';
 
 const BCRYPT_COST = 12;
 
@@ -39,6 +39,8 @@ function isUniqueViolation(error: unknown): boolean {
   );
 }
 
+// Read the refresh token from the request cookies.
+// Returns null if the cookie is invalid.
 function readRefreshCookie(cookies: unknown): string | null {
   if (typeof cookies !== 'object' || cookies === null) {
     return null;

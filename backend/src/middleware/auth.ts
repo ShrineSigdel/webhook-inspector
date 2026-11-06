@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
-import { config } from '../config';
+import { config } from '../lib/config';
 
 function bearerToken(header: string | undefined): string | null {
   if (!header?.startsWith('Bearer ')) {

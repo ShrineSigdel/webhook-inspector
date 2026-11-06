@@ -1,7 +1,13 @@
 import express, { Router } from 'express';
-import { pool } from '../db';
+import { pool } from '../lib/db';
 import { hookLimiter } from '../middleware/rateLimit';
-import { endpointIdSchema } from '../validation';
+import { CAPTURE_JOB_OPTIONS, capture, type CaptureJob } from '../lib/queues';
+import { redis } from '../lib/redis';
+import { endpointIdSchema } from '../lib/validation';
+
+// Requests are truncated for the queue, but size_bytes keeps the real size.
+const MAX_BODY_BYTES = 256 * 1024;
+const VALID_CACHE_SECONDS = 60;
 
 export const hooksRouter = Router();
 
@@ -17,38 +23,50 @@ hooksRouter.all('/:id', hookLimiter, async (req, res, next) => {
   }
 
   try {
-    const endpoint = await pool.query(
-      'SELECT id FROM endpoints WHERE id = $1 AND expires_at > now()',
-      [parsedId.data],
-    );
+    // A busy integration can hit the same endpoint thousands of times, so
+    // keep "this endpoint exists" in Redis instead of querying Postgres each
+    // time. A deleted endpoint can stay valid here for up to a minute.
+    const cacheKey = `endpoint:valid:${parsedId.data}`;
+    const cached = await redis.get(cacheKey);
 
-    if (endpoint.rowCount === 0) {
-      res.status(404).json({ error: 'endpoint not found' });
-      return;
+    if (cached !== '1') {
+      const endpoint = await pool.query(
+        'SELECT id FROM endpoints WHERE id = $1 AND expires_at > now()',
+        [parsedId.data],
+      );
+
+      if (endpoint.rowCount === 0) {
+        res.status(404).json({ error: 'endpoint not found' });
+        return;
+      }
+
+      await redis.set(cacheKey, '1', 'EX', VALID_CACHE_SECONDS);
     }
 
-    // for no request.body conditions, use empty buffer
+    // With no body, express.raw leaves req.body as {}, so check the type.
     const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
 
     // Postgres TEXT cannot store NUL bytes; replace them instead of failing
     // the whole capture. size_bytes still records the true byte length.
-    const body = rawBody.toString('utf8').replaceAll('\u0000', '\uFFFD');
+    const body = rawBody
+      .subarray(0, MAX_BODY_BYTES)
+      .toString('utf8')
+      .replaceAll('\u0000', '\uFFFD');
 
-    await pool.query(
-      `INSERT INTO requests
-         (endpoint_id, method, query, headers, body, content_type, ip, size_bytes)
-       VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $6, $7, $8)`,
-      [
-        parsedId.data,
-        req.method,
-        JSON.stringify(req.query),
-        JSON.stringify(req.headers),
-        body,
-        req.get('content-type') ?? null,
-        req.ip ?? null,
-        rawBody.byteLength,
-      ],
-    );
+    const job: CaptureJob = {
+      v: 1,
+      endpointId: parsedId.data,
+      method: req.method,
+      query: req.query,
+      headers: req.headers,
+      body,
+      contentType: req.get('content-type') ?? null,
+      ip: req.ip ?? null,
+      sizeBytes: rawBody.byteLength,
+    };
+
+    // Enqueue and reply immediately; the worker owns the database write.
+    await capture.add('save', job, CAPTURE_JOB_OPTIONS);
 
     res.status(200).json({ ok: true });
   } catch (error) {

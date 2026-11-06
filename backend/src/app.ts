@@ -4,6 +4,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { authRouter } from './routes/auth';
 import { endpointsRouter, meEndpointsRouter } from './routes/endpoints';
 import { hooksRouter } from './routes/hooks';
+import { streamRouter } from './routes/stream';
 
 export const app = express();
 
@@ -20,6 +21,7 @@ app.use('/hook', hooksRouter);
 app.use('/api', express.json(), cookieParser());
 app.use('/api/auth', authRouter);
 app.use('/api/endpoints', endpointsRouter);
+app.use('/api/endpoints', streamRouter);
 app.use('/api/me', meEndpointsRouter);
 
 app.use(errorHandler);

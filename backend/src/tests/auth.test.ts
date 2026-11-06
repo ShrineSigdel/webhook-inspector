@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { afterAll, describe, expect, it } from 'vitest';
-import { app } from './app';
-import { config } from './config';
-import { pool } from './db';
+import { app } from '../app';
+import { config } from '../lib/config';
+import { pool } from '../lib/db';
 
 // These tests run against the dev database. Every email starts with this tag
 // so afterAll can remove only what this run created.

@@ -1,41 +1,16 @@
 import { Router } from 'express';
 import { customAlphabet } from 'nanoid';
-import { pool } from '../db';
-import { loadEndpoint, toEndpointJson, type EndpointRow } from '../endpoints';
+import { pool } from '../lib/db';
+import { loadEndpoint, toEndpointJson, type EndpointRow } from '../lib/endpoints';
 import { optionalAuth, requireAuth } from '../middleware/auth';
 import { endpointCreateLimiter } from '../middleware/rateLimit';
-import { endpointIdSchema, historyQuerySchema } from '../validation';
+import { toRequestJson, type RequestRow } from '../lib/requests';
+import { endpointIdSchema, historyQuerySchema } from '../lib/validation';
 
 // The alphabet excludes look-alike characters (l, o, 0, 1).
 const newEndpointId = customAlphabet('abcdefghijkmnpqrstuvwxyz23456789', 10);
 
 const ENDPOINT_COLUMNS = 'id, user_id, created_at, expires_at';
-
-interface RequestRow {
-  id: string;
-  method: string;
-  query: unknown;
-  headers: unknown;
-  body: string | null;
-  content_type: string | null;
-  ip: string | null;
-  size_bytes: number;
-  created_at: Date;
-}
-
-function toRequestJson(row: RequestRow) {
-  return {
-    id: row.id,
-    method: row.method,
-    query: row.query,
-    headers: row.headers,
-    body: row.body,
-    contentType: row.content_type,
-    ip: row.ip,
-    sizeBytes: row.size_bytes,
-    createdAt: row.created_at.toISOString(),
-  };
-}
 
 export const endpointsRouter = Router();
 
