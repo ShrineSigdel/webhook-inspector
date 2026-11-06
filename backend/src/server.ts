@@ -1,26 +1,49 @@
-import express from 'express';
-import { config } from './config';
-import { errorHandler } from './middleware/errorHandler';
-import { endpointsRouter } from './routes/endpoints';
-import { hooksRouter } from './routes/hooks';
+import { app } from './app';
+import { config } from './lib/config';
+import { pool } from './lib/db';
+import { capture, maintenance, queueConnection } from './lib/queues';
+import { redis } from './lib/redis';
+import { closeAllStreams } from './routes/stream';
 
-const app = express();
-
-// Behind Nginx, so req.ip and rate limits must read X-Forwarded-For.
-app.set('trust proxy', 1);
-
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true });
-});
-
-// The hook route needs the untouched body, so it must come before express.json().
-app.use('/hook', hooksRouter);
-
-app.use('/api', express.json());
-app.use('/api/endpoints', endpointsRouter);
-
-app.use(errorHandler);
-
-app.listen(config.port, () => {
+const server = app.listen(config.port, () => {
   console.log(`API listening on port ${config.port}`);
 });
+
+let shuttingDown = false;
+
+async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) {
+    return;
+  }
+  shuttingDown = true;
+  console.log(`${signal} received, shutting down API`);
+
+  try {
+    // SSE responses never end on their own; closing them first lets
+    // server.close() finish instead of waiting for every client.
+    closeAllStreams();
+
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    await capture.close();
+    await maintenance.close();
+    await queueConnection.quit();
+    await redis.quit();
+    await pool.end();
+    process.exit(0);
+  } catch (error) {
+    console.error('Shutdown failed:', error);
+    process.exit(1);
+  }
+}
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
