@@ -9,6 +9,8 @@ import { endpointIdSchema } from '../lib/validation';
 const MAX_BODY_BYTES = 256 * 1024;
 const VALID_CACHE_SECONDS = 60;
 
+// Goal : Accept any request quickly and hand it to the worker.
+
 export const hooksRouter = Router();
 
 // Capture every content type as a raw buffer. This router is mounted before

@@ -5,6 +5,7 @@ import { loadEndpoint, toEndpointJson, type EndpointRow } from '../lib/endpoints
 import { optionalAuth, requireAuth } from '../middleware/auth';
 import { endpointCreateLimiter } from '../middleware/rateLimit';
 import { toRequestJson, type RequestRow } from '../lib/requests';
+import { redis } from '../lib/redis';
 import { endpointIdSchema, historyQuerySchema } from '../lib/validation';
 
 // The alphabet excludes look-alike characters (l, o, 0, 1).
@@ -46,6 +47,41 @@ endpointsRouter.get('/:id', optionalAuth, async (req, res, next) => {
     }
 
     res.json(toEndpointJson(endpoint, req.userId));
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Deleting is owner-only. Guests never own endpoints, and a stranger gets the
+// same 404 as for any other inaccessible endpoint.
+endpointsRouter.delete('/:id', requireAuth, async (req, res, next) => {
+  try {
+    const parsedId = endpointIdSchema.safeParse(req.params.id);
+    if (!parsedId.success) {
+      res.status(404).json({ error: 'endpoint not found' });
+      return;
+    }
+
+    // requests rows disappear through ON DELETE CASCADE.
+    const result = await pool.query<{ id: string }>(
+      'DELETE FROM endpoints WHERE id = $1 AND user_id = $2 RETURNING id',
+      [parsedId.data, req.userId],
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'endpoint not found' });
+      return;
+    }
+
+    // The hook route caches endpoint validity for a minute. Without this, a
+    // deleted endpoint would keep accepting requests until the cache expires.
+    try {
+      await redis.del(`endpoint:valid:${parsedId.data}`);
+    } catch (error) {
+      console.error(`Failed to clear endpoint cache for ${parsedId.data}:`, error);
+    }
+
+    res.json({ ok: true });
   } catch (error) {
     next(error);
   }
