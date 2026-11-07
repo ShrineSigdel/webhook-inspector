@@ -33,8 +33,16 @@ function AppShell() {
           </Routes>
         )}
       </main>
-      <footer className="border-t border-slate-200 py-4 text-center text-xs text-slate-400">
-        Captured content is untrusted. It is always shown as text.
+      <footer className="border-t border-[var(--border)] py-4 text-center text-xs text-[var(--text-muted)]">
+        Built by{' '}
+        <a
+          href="https://github.com/ShrineSigdel"
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium"
+        >
+          Shrine Sigdel
+        </a>
       </footer>
     </div>
   )
