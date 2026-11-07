@@ -157,9 +157,17 @@ describe('capture pipeline', () => {
 
     const reader = response.body?.getReader();
     expect(reader).toBeDefined();
-    const chunk = await reader!.read();
-    const text = new TextDecoder().decode(chunk.value);
-    expect(text).toContain('data: ');
+
+    // The stream starts with a ": connected" comment so proxies flush headers.
+    // Read until the actual event arrives instead of assuming it is chunk one.
+    const decoder = new TextDecoder();
+    let text = '';
+    while (!text.includes('data: ')) {
+      const chunk = await reader!.read();
+      expect(chunk.done).toBe(false);
+      text += decoder.decode(chunk.value, { stream: true });
+    }
+
     expect(text).toContain('"body":"{\\"hello\\":\\"world\\"}"');
 
     // Closing the client must release the dedicated subscriber.

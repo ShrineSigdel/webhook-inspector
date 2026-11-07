@@ -112,6 +112,10 @@ streamRouter.get('/:id/stream', async (req, res, next) => {
       'X-Accel-Buffering': 'no',
     });
     res.flushHeaders();
+    // EventSource opens on the first response bytes. Some dev proxies hold
+    // headers until a chunk arrives, so send an immediate comment to make the
+    // "Live" state appear at once instead of after the first event or ping.
+    res.write(': connected\n\n');
     openStreams.add(res);
 
     // One subscriber per connection: Redis Pub/Sub delivers each message to

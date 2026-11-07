@@ -24,6 +24,7 @@ interface UserRow {
 interface RefreshTokenRow {
   id: string;
   user_id: string;
+  email: string;
   revoked_at: Date | null;
   expired: boolean;
 }
@@ -124,9 +125,10 @@ authRouter.post('/refresh', async (req, res, next) => {
     }
 
     const result = await pool.query<RefreshTokenRow>(
-      `SELECT id, user_id, revoked_at, (expires_at <= now()) AS expired
-       FROM refresh_tokens
-       WHERE token_hash = $1`,
+      `SELECT rt.id, rt.user_id, u.email, rt.revoked_at, (rt.expires_at <= now()) AS expired
+       FROM refresh_tokens rt
+       JOIN users u ON u.id = rt.user_id
+       WHERE rt.token_hash = $1`,
       [hashRefreshToken(token)],
     );
     const row = result.rows[0];
@@ -161,7 +163,12 @@ authRouter.post('/refresh', async (req, res, next) => {
     const newToken = await issueRefreshToken(row.user_id);
 
     setRefreshCookie(res, newToken);
-    res.json({ accessToken: signAccessToken(row.user_id) });
+    // The frontend keeps access tokens in memory only, so a page reload has no
+    // user details until refresh tells it who the session belongs to.
+    res.json({
+      accessToken: signAccessToken(row.user_id),
+      user: { id: row.user_id, email: row.email },
+    });
   } catch (error) {
     next(error);
   }
