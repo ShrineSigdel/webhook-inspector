@@ -81,8 +81,8 @@ export function MyEndpoints() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">My endpoints</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">My endpoints</h1>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
             Endpoints you own. Each one lasts 30 days from creation.
           </p>
         </div>
@@ -102,8 +102,8 @@ export function MyEndpoints() {
         <Loading label="Loading endpoints…" />
       ) : endpoints.length === 0 ? (
         <div className={`${cardClass} p-10 text-center`}>
-          <h2 className="text-base font-semibold text-slate-900">No endpoints yet</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">
+          <h2 className="text-base font-semibold text-[var(--text)]">No endpoints yet</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-[var(--text-muted)]">
             Create one and send it a request. It will appear here and stay available for
             30 days.
           </p>
@@ -117,21 +117,24 @@ export function MyEndpoints() {
           </button>
         </div>
       ) : (
-        <ul className={`${cardClass} divide-y divide-slate-100`}>
+        <ul className={`${cardClass} divide-y divide-[var(--border)]`}>
           {endpoints.map((endpoint) => (
             <li
               key={endpoint.id}
-              className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 p-4 transition hover:bg-[var(--bg-elevated)] sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
                 <Link
                   to={`/endpoints/${endpoint.id}`}
-                  className="font-mono text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+                  className="font-mono text-sm font-semibold text-[var(--accent)] hover:text-[var(--accent-hover)]"
                 >
                   {endpoint.id}
                 </Link>
-                <p className="mt-1 truncate text-xs text-slate-500">{endpoint.url}</p>
-                <p className="mt-1 text-xs text-slate-400" title={formatDate(endpoint.expiresAt)}>
+                <p className="mt-1 truncate text-xs text-[var(--text-muted)]">{endpoint.url}</p>
+                <p
+                  className="mt-1 text-xs text-[var(--text-muted)]"
+                  title={formatDate(endpoint.expiresAt)}
+                >
                   Expires {formatRelative(endpoint.expiresAt, now)}
                 </p>
               </div>

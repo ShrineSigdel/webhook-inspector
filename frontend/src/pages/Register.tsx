@@ -49,14 +49,14 @@ export function Register() {
 
   return (
     <div className="mx-auto max-w-md py-8">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Create an account</h1>
-      <p className="mt-2 text-sm text-slate-600">
+      <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">Create an account</h1>
+      <p className="mt-2 text-sm text-[var(--text-muted)]">
         Accounts keep endpoints for 30 days instead of 24 hours.
       </p>
 
       <form onSubmit={(event) => void submit(event)} className={`${cardClass} mt-6 space-y-4 p-6`}>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-700">Email</span>
+          <span className="mb-1 block text-sm font-medium text-[var(--text-muted)]">Email</span>
           <input
             type="email"
             required
@@ -68,7 +68,7 @@ export function Register() {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-700">Password</span>
+          <span className="mb-1 block text-sm font-medium text-[var(--text-muted)]">Password</span>
           <input
             type="password"
             required
@@ -77,13 +77,15 @@ export function Register() {
             onChange={(event) => setPassword(event.target.value)}
             className={inputClass}
           />
-          <span className="mt-1 block text-xs text-slate-500">
+          <span className="mt-1 block text-xs text-[var(--text-muted)]">
             At least 10 characters, at most 72 bytes.
           </span>
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-700">Confirm password</span>
+          <span className="mb-1 block text-sm font-medium text-[var(--text-muted)]">
+            Confirm password
+          </span>
           <input
             type="password"
             required
@@ -101,9 +103,9 @@ export function Register() {
         </button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-slate-600">
+      <p className="mt-4 text-center text-sm text-[var(--text-muted)]">
         Already have an account?{' '}
-        <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-500">
+        <Link to="/login" className="font-semibold">
           Log in
         </Link>
       </p>

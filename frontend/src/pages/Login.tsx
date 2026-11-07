@@ -38,14 +38,14 @@ export function Login() {
 
   return (
     <div className="mx-auto max-w-md py-8">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Log in</h1>
-      <p className="mt-2 text-sm text-slate-600">
+      <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">Log in</h1>
+      <p className="mt-2 text-sm text-[var(--text-muted)]">
         Sign in to keep endpoints for 30 days and see them all in one place.
       </p>
 
       <form onSubmit={(event) => void submit(event)} className={`${cardClass} mt-6 space-y-4 p-6`}>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-700">Email</span>
+          <span className="mb-1 block text-sm font-medium text-[var(--text-muted)]">Email</span>
           <input
             type="email"
             required
@@ -57,7 +57,7 @@ export function Login() {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-700">Password</span>
+          <span className="mb-1 block text-sm font-medium text-[var(--text-muted)]">Password</span>
           <input
             type="password"
             required
@@ -75,9 +75,9 @@ export function Login() {
         </button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-slate-600">
+      <p className="mt-4 text-center text-sm text-[var(--text-muted)]">
         No account?{' '}
-        <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
+        <Link to="/register" className="font-semibold">
           Create one
         </Link>
       </p>

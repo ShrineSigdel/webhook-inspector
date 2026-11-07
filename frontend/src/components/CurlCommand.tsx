@@ -1,4 +1,5 @@
 import { CopyButton } from './CopyButton'
+import { codeBlockClass } from '../lib/styles'
 
 export function CurlCommand({ url }: { url: string }) {
   const command = [
@@ -9,9 +10,7 @@ export function CurlCommand({ url }: { url: string }) {
 
   return (
     <div>
-      <pre className="overflow-x-auto rounded-lg bg-slate-950 p-4 text-xs leading-relaxed text-slate-100">
-        {command}
-      </pre>
+      <pre className={`${codeBlockClass} whitespace-pre`}>{command}</pre>
       <div className="mt-2 flex justify-end">
         <CopyButton value={command} label="Copy curl" />
       </div>

@@ -16,10 +16,13 @@ export function Header() {
   }
 
   return (
-    <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2 font-semibold text-slate-900">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
+    <header className="border-b border-[var(--border)] bg-[var(--bg-sidebar)]">
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-semibold text-[var(--text)] hover:no-underline"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] bg-[var(--accent)] text-sm font-bold text-[var(--on-accent)]">
             W
           </span>
           <span>Webhook Inspector</span>
@@ -31,20 +34,25 @@ export function Header() {
               <NavLink
                 to="/endpoints"
                 className={({ isActive }) =>
-                  `rounded-lg px-3 py-2 font-medium transition ${
-                    isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+                  `rounded-[var(--radius-md)] px-3 py-2 font-medium transition hover:no-underline ${
+                    isActive
+                      ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                      : 'text-[var(--text-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text)]'
                   }`
                 }
               >
                 My endpoints
               </NavLink>
-              <span className="hidden max-w-48 truncate text-slate-500 sm:inline" title={user.email}>
+              <span
+                className="hidden max-w-48 truncate text-[var(--text-muted)] sm:inline"
+                title={user.email}
+              >
                 {user.email}
               </span>
               <button
                 type="button"
                 onClick={() => void handleLogout()}
-                className="rounded-lg px-3 py-2 font-medium text-slate-600 transition hover:bg-slate-50"
+                className="rounded-[var(--radius-md)] px-3 py-2 font-medium text-[var(--text-muted)] transition hover:bg-[var(--bg-elevated)] hover:text-[var(--text)]"
               >
                 Log out
               </button>
@@ -53,13 +61,13 @@ export function Header() {
             <>
               <NavLink
                 to="/login"
-                className="rounded-lg px-3 py-2 font-medium text-slate-600 transition hover:bg-slate-50"
+                className="rounded-[var(--radius-md)] px-3 py-2 font-medium text-[var(--text-muted)] transition hover:bg-[var(--bg-elevated)] hover:text-[var(--text)] hover:no-underline"
               >
                 Log in
               </NavLink>
               <NavLink
                 to="/register"
-                className="rounded-lg bg-indigo-600 px-3 py-2 font-semibold text-white transition hover:bg-indigo-500"
+                className="rounded-[var(--radius-md)] bg-[var(--accent)] px-3 py-2 font-semibold text-[var(--on-accent)] transition hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)] hover:no-underline"
               >
                 Sign up
               </NavLink>

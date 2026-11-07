@@ -24,21 +24,37 @@ import { NotFound } from './NotFound'
 const PAGE_SIZE = 50
 
 const STATUS_STYLE: Record<StreamStatus, { label: string; dot: string; text: string }> = {
-  off: { label: 'Stream off', dot: 'bg-slate-300', text: 'text-slate-500' },
-  connecting: { label: 'Connecting…', dot: 'bg-amber-400', text: 'text-amber-700' },
-  live: { label: 'Live', dot: 'bg-emerald-500', text: 'text-emerald-700' },
-  reconnecting: { label: 'Reconnecting…', dot: 'bg-amber-500', text: 'text-amber-700' },
+  off: { label: 'Stream off', dot: 'bg-[var(--text-faint)]', text: 'text-[var(--text-muted)]' },
+  connecting: { label: 'Connecting…', dot: 'bg-[var(--warning)]', text: 'text-[var(--warning)]' },
+  live: { label: 'Live', dot: 'live-dot', text: 'text-[var(--success)]' },
+  reconnecting: { label: 'Reconnecting…', dot: 'bg-[var(--warning)]', text: 'text-[var(--warning)]' },
 }
 
 function StreamBadge({ status }: { status: StreamStatus }) {
   const style = STATUS_STYLE[status]
   return (
     <span className={`inline-flex items-center gap-2 text-xs font-semibold ${style.text}`}>
-      <span
-        className={`h-2 w-2 rounded-full ${style.dot} ${status === 'live' ? 'animate-pulse' : ''}`}
-      />
+      <span className={`h-2 w-2 rounded-full ${style.dot}`} />
       {style.label}
     </span>
+  )
+}
+
+function EmptyIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="h-10 w-10 text-[var(--text-faint)]"
+    >
+      <path d="m22 2-7 20-4-9-9-4Z" />
+      <path d="M22 2 11 13" />
+    </svg>
   )
 }
 
@@ -219,12 +235,21 @@ function EndpointView({ id }: { id: string }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-lg font-bold tracking-tight text-slate-900">Endpoint</h1>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+              <h1 className="text-lg font-bold tracking-tight text-[var(--text)]">Endpoint</h1>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.04em] ${
+                  endpoint.owned
+                    ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                    : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
+                }`}
+              >
                 {endpoint.owned ? 'Yours' : 'Guest link'}
               </span>
             </div>
-            <p className="mt-1 text-xs text-slate-500" title={formatDate(endpoint.expiresAt)}>
+            <p
+              className="mt-1 text-xs text-[var(--text-muted)]"
+              title={formatDate(endpoint.expiresAt)}
+            >
               Expires {formatRelative(endpoint.expiresAt, now)}
             </p>
           </div>
@@ -243,7 +268,7 @@ function EndpointView({ id }: { id: string }) {
         </div>
 
         {!endpoint.owned && (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-[var(--text-muted)]">
             This is a guest endpoint. Anyone with the link can view it, and it expires 24
             hours after creation.
           </p>
@@ -254,10 +279,10 @@ function EndpointView({ id }: { id: string }) {
 
       <div className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
         <section className={`${cardClass} overflow-hidden`}>
-          <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+          <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-3">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
               Requests
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+              <span className="rounded-full bg-[var(--bg-elevated)] px-2 py-0.5 text-xs font-medium text-[var(--text-muted)]">
                 {requests.length}
               </span>
             </h2>
@@ -273,7 +298,7 @@ function EndpointView({ id }: { id: string }) {
 
           {requests.length === 0 ? (
             <div className="p-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--text-muted)]">
                 Nothing captured yet. Send this endpoint a request:
               </p>
               <div className="mt-3">
@@ -291,7 +316,7 @@ function EndpointView({ id }: { id: string }) {
                 />
               </div>
               {nextBefore && (
-                <div className="border-t border-slate-200 p-3">
+                <div className="border-t border-[var(--border)] p-3">
                   <button
                     type="button"
                     onClick={() => void loadOlder()}
@@ -310,10 +335,13 @@ function EndpointView({ id }: { id: string }) {
           {selected ? (
             <RequestDetail key={selected.id} request={selected} />
           ) : (
-            <div className="flex h-full min-h-64 items-center justify-center p-6 text-center text-sm text-slate-500">
-              {requests.length === 0
-                ? 'Captured requests will appear here, live.'
-                : 'Select a request to inspect it.'}
+            <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 p-6 text-center text-sm text-[var(--text-muted)]">
+              <EmptyIcon />
+              <p>
+                {requests.length === 0
+                  ? 'Captured requests will appear here, live.'
+                  : 'Select a request to inspect it.'}
+              </p>
             </div>
           )}
         </section>

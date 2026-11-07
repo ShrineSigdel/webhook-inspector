@@ -54,6 +54,10 @@ Finish every day with this, in this order:
 - Return JSON errors in the shape `{ "error": "message" }`. Never leak stack traces.
 - Frontend: function components and hooks, typed API client in one file, Tailwind for styling.
 
+## Theme
+
+The frontend uses a Bruno-inspired dark theme. All colors, radii, fonts and shadows are CSS custom properties in `frontend/src/styles/theme.css`; that file is the single source of truth. Components use tokens via `var(--...)` (for example `bg-[var(--bg-surface)]`); never hardcode colors in component files. Global body, link, focus, selection and scrollbar styles also live in that file. When adding UI, reuse the existing tokens and `frontend/src/lib/styles.ts` class strings instead of introducing new palettes.
+
 ## Security rules (non-negotiable)
 
 - Passwords: bcrypt with cost 12. Reject passwords longer than 72 bytes. Never store or log plaintext.
