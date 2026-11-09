@@ -1,0 +1,9 @@
+# Used when the repo root is the build context (nginx/Dockerfile).
+# Without this, COPY frontend/ would put the host's node_modules in the image.
+.git
+**/node_modules
+**/dist
+**/.env
+**/*.log
+backups
+certbot
