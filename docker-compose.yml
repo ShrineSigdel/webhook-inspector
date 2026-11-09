@@ -1,0 +1,92 @@
+# The full stack. Kept separate from docker-compose.dev.yml so both can run
+# at the same time without replacing each other's database and Redis.
+name: webhook-inspector
+
+# api and worker are the same image; only the command differs.
+x-backend: &backend
+  build: ./backend
+  image: webhook-inspector-api
+  restart: unless-stopped
+  environment:
+    DATABASE_URL: ${DATABASE_URL}
+    REDIS_URL: ${REDIS_URL}
+    JWT_SECRET: ${JWT_SECRET}
+    PORT: ${PORT:-3000}
+    PUBLIC_URL: ${PUBLIC_URL}
+    COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    NODE_ENV: production
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Migrations only run when the volume is empty. See docs/DEPLOY.md.
+      - ./backend/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # $$ escapes Compose interpolation so the shell inside the container
+      # expands the variables from the service environment.
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    <<: *backend
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  worker:
+    <<: *backend
+    command: ['node', 'dist/worker.js']
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    image: webhook-inspector-web
+    restart: unless-stopped
+    ports:
+      # The only published port in the whole stack.
+      - '80:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/ >/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  pgdata:
