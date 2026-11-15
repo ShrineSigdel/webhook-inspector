@@ -5,3 +5,4 @@ backups
 certbot
 *.log
 .DS_Store
+personal/
